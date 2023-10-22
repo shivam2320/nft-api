@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import next from "next";
 
 type nftData = {
   chain: string;
@@ -17,9 +16,9 @@ export default async function handler(
   const allNFTs = [];
 
   const address = req.query.address;
+  const network = req.query.network;
 
-  if (req.query.network == "evm") {
-    console.log("asasasa");
+  if (network == "evm") {
     const chains = ["eth", "polygon", "bsc", "arbitrum", "avalanche"];
 
     for (const chain of chains) {
@@ -48,8 +47,45 @@ export default async function handler(
     }
 
     res.status(200).json(allNFTs);
-  } else if (req.query.network == "solana") {
-  } else if (req.query.network == "aptos") {
+  } else if (network == "solana") {
+    let apiKey = process.env.HELIUS_API_KEY;
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    console.log(url);
+    const address = req.query.address;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "string",
+        method: "getAssetsByOwner",
+        params: {
+          ownerAddress: address,
+          page: 1,
+          limit: 1000,
+        },
+      }),
+    });
+    const { result } = await response.json();
+    console.log(result.items[18]);
+
+    for (let i = 0; i < result.items.length; i++) {
+      let nft: nftData = {
+        chain: "solana",
+        tokenAddress: result.items[i].id,
+        tokenId: result.items[i].token_id, //
+        name: result.items[i].content.metadata.name,
+        symbol: result.items[i].symbol, //
+        tokenURI: result.items[i].content.json_uri,
+      };
+      allNFTs.push(nft);
+    }
+
+    res.status(200).json(allNFTs);
+  } else if (network == "aptos") {
     let nftUrl = `https://mainnet-aptos-api.moralis.io/wallets/nfts?limit=30&owner_addresses%5B0%5D=${address}`;
 
     let apiKey = process.env.MORALIS_API_KEY;
@@ -66,8 +102,7 @@ export default async function handler(
     for (let i = 0; i < data.result.length; i++) {
       let idHash = data.result[i].token_data_id_hash;
       let tokenDataUrl = `https://mainnet-aptos-api.moralis.io/nfts?token_ids%5B0%5D=${idHash}`;
-      console.log(idHash);
-      console.log(tokenDataUrl);
+
       const idHashResponse = await fetch(tokenDataUrl, {
         method: "GET",
         headers: {
@@ -76,18 +111,17 @@ export default async function handler(
         },
       });
       const nftInfo = await idHashResponse.json();
-      console.log(nftInfo);
+
       let nft: nftData = {
         chain: "aptos",
-        tokenAddress: data.result[i].token_address,
-        tokenId: data.result[i].token_id,
+        tokenAddress: data.result[i].token_address, //
+        tokenId: data.result[i].token_id, //
         name: data.result[i].name,
         symbol: data.result[i].symbol,
         tokenURI: nftInfo[0].metadata_uri,
       };
       allNFTs.push(nft);
     }
-    console.log(allNFTs);
     res.status(200).json(allNFTs);
   }
 }
