@@ -19,7 +19,7 @@ export default async function handler(
   const network = req.query.network;
 
   if (network == "evm") {
-    const chains = ["eth", "polygon", "bsc", "arbitrum", "avalanche"];
+    const chains = ["eth", "polygon", "arbitrum", "bsc", "avalanche"];
 
     for (const chain of chains) {
       let url = `https://deep-index.moralis.io/api/v2.2/${address}/nft?chain=${chain}&format=decimal&media_items=false`;
@@ -31,16 +31,21 @@ export default async function handler(
           "X-API-Key": apiKey!,
         },
       });
-      const data = await response.json();
+      let data = await response.json();
 
       for (let i = 0; i < data.result.length; i++) {
+        let img;
+        if (data.result[i].metadata) {
+          img = JSON.parse(data.result[i].metadata).image;
+        }
+
         let nft: nftData = {
           chain: chain,
           tokenAddress: data.result[i].token_address,
           tokenId: data.result[i].token_id,
           name: data.result[i].name,
           symbol: data.result[i].symbol,
-          tokenURI: data.result[i].token_uri,
+          tokenURI: img,
         };
         allNFTs.push(nft);
       }
@@ -50,7 +55,7 @@ export default async function handler(
   } else if (network == "solana") {
     let apiKey = process.env.HELIUS_API_KEY;
     const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
-    console.log(url);
+
     const address = req.query.address;
 
     const response = await fetch(url, {
@@ -70,7 +75,6 @@ export default async function handler(
       }),
     });
     const { result } = await response.json();
-    console.log(result.items[18]);
 
     for (let i = 0; i < result.items.length; i++) {
       let nft: nftData = {
@@ -79,7 +83,7 @@ export default async function handler(
         tokenId: result.items[i].token_id, //
         name: result.items[i].content.metadata.name,
         symbol: result.items[i].symbol, //
-        tokenURI: result.items[i].content.json_uri,
+        tokenURI: result.items[i].content.links.image,
       };
       allNFTs.push(nft);
     }
@@ -112,13 +116,16 @@ export default async function handler(
       });
       const nftInfo = await idHashResponse.json();
 
+      const uri = await fetch(nftInfo[0].metadata_uri);
+      const uriData = await uri.json();
+
       let nft: nftData = {
         chain: "aptos",
-        tokenAddress: data.result[i].token_address, //
+        tokenAddress: nftInfo[0].creator_address,
         tokenId: data.result[i].token_id, //
         name: data.result[i].name,
         symbol: data.result[i].symbol,
-        tokenURI: nftInfo[0].metadata_uri,
+        tokenURI: uriData.image,
       };
       allNFTs.push(nft);
     }
