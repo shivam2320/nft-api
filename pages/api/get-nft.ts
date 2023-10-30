@@ -10,6 +10,14 @@ type nftData = {
   image: string;
 };
 
+const chains: { [key: string]: string } = {
+  "1": "eth",
+  "137": "polygon",
+  "56": "bsc",
+  "42161": "arbitrum",
+  "43114": "avalanche",
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -19,8 +27,10 @@ export default async function handler(
 
   if (network == "evm") {
     const token_id = req.query.token_id;
-    const chain = req.query.chain;
-    let url = `https://deep-index.moralis.io/api/v2.2/nft/${token_address}/${token_id}?chain=${chain}&format=decimal&media_items=false`;
+    const chain_id = req.query.chain_id;
+    let url = `https://deep-index.moralis.io/api/v2.2/nft/${token_address}/${token_id}?chain=${
+      chains[chain_id as string]
+    }&format=decimal&media_items=false`;
     let apiKey = process.env.MORALIS_API_KEY;
     const response = await fetch(url, {
       method: "GET",
@@ -34,7 +44,7 @@ export default async function handler(
 
     let nftData: nftData = {
       network: network,
-      chain: chain as string,
+      chain: chains[chain_id as string],
       tokenAddress: data.token_address,
       tokenId: data.token_id,
       name: data.name,
