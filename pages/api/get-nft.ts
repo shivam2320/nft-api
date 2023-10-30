@@ -78,5 +78,37 @@ export default async function handler(
     };
 
     res.status(200).json(nftData);
+  } else if (network == "solana") {
+    let apiKey = process.env.HELIUS_API_KEY;
+    const url = `https://api.helius.xyz/v0/token-metadata/?api-key=${apiKey}`;
+
+    const token_address = [req.query.token_address];
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mintAccounts: token_address,
+        includeOffChain: true,
+        disableCache: false,
+      }),
+    });
+
+    const data = await response.json();
+
+    let name = data[0].offChainMetadata.metadata.name;
+
+    let nftData: nftData = {
+      network: network,
+      tokenAddress: data[0].creator_address,
+      tokenId: name.slice(name.lastIndexOf("#") + 1, name.length),
+      name: name,
+      symbol: data[0].offChainMetadata.metadata.symbol,
+      image: data[0].offChainMetadata.metadata.image,
+    };
+
+    res.status(200).json(nftData);
   }
 }

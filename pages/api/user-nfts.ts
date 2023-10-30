@@ -77,12 +77,13 @@ export default async function handler(
     const { result } = await response.json();
 
     for (let i = 0; i < result.items.length; i++) {
+      let name = result.items[i].content.metadata.name;
       let nft: nftData = {
         chain: "solana",
         tokenAddress: result.items[i].id,
-        tokenId: result.items[i].token_id, //
-        name: result.items[i].content.metadata.name,
-        symbol: result.items[i].symbol, //
+        tokenId: name.slice(name.lastIndexOf("#") + 1, name.length),
+        name: name,
+        symbol: result.items[i].content.metadata.symbol,
         image: result.items[i].content.links.image,
       };
       allNFTs.push(nft);
