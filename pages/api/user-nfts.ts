@@ -122,7 +122,7 @@ export default async function handler(
       let nft: nftData = {
         chain: "aptos",
         tokenAddress: nftInfo[0].creator_address,
-        tokenId: data.result[i].token_id, //
+        tokenId: idHash,
         name: data.result[i].name,
         symbol: data.result[i].symbol,
         image: uriData.image,
