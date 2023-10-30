@@ -6,7 +6,7 @@ type nftData = {
   tokenId: string;
   name: string;
   symbol: string;
-  tokenURI: string;
+  image: string;
 };
 
 export default async function handler(
@@ -45,7 +45,7 @@ export default async function handler(
           tokenId: data.result[i].token_id,
           name: data.result[i].name,
           symbol: data.result[i].symbol,
-          tokenURI: img,
+          image: img,
         };
         allNFTs.push(nft);
       }
@@ -83,7 +83,7 @@ export default async function handler(
         tokenId: result.items[i].token_id, //
         name: result.items[i].content.metadata.name,
         symbol: result.items[i].symbol, //
-        tokenURI: result.items[i].content.links.image,
+        image: result.items[i].content.links.image,
       };
       allNFTs.push(nft);
     }
@@ -125,7 +125,7 @@ export default async function handler(
         tokenId: data.result[i].token_id, //
         name: data.result[i].name,
         symbol: data.result[i].symbol,
-        tokenURI: uriData.image,
+        image: uriData.image,
       };
       allNFTs.push(nft);
     }
